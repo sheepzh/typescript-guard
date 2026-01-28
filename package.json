@@ -1,0 +1,58 @@
+{
+    "name": "ts-guards",
+    "version": "1.0.0",
+    "description": "A type guard library that safely validates and narrows JavaScript variables to TypeScript types. Works seamlessly in both Node.js and browser environments.",
+    "license": "MIT",
+    "author": "Victor Zhang",
+    "homepage": "https://github.com/sheepzh/ts-guards",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sheepzh/ts-guards.git"
+    },
+    "bugs": {
+        "url": "https://github.com/sheepzh/ts-guards/issues"
+    },
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "types": "./dist/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/esm/index.d.ts",
+            "import": "./dist/esm/index.js",
+            "require": "./dist/cjs/index.js"
+        }
+    },
+    "engines": {
+        "node": ">=24.0.0"
+    },
+    "keywords": [
+        "typescript",
+        "type-guard",
+        "type-safety",
+        "runtime-validation",
+        "type-narrowing"
+    ],
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc --module esnext --target esnext --outDir dist/esm --declaration --declarationMap",
+        "build:cjs": "tsc --module commonjs --target es2015 --outDir dist/cjs",
+        "clean": "rm -rf dist .tsbuildinfo",
+        "prebuild": "npm run clean",
+        "dev": "tsc --module esnext --target esnext --outDir dist/esm --watch",
+        "lint": "tsc --noEmit",
+        "prepublishOnly": "npm run lint && npm run build",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "devDependencies": {
+        "@types/node": "^25.0.10",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18"
+    }
+}

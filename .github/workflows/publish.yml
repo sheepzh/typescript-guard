@@ -1,0 +1,100 @@
+name: Publish to npm
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Get latest tag
+              if: github.event_name == 'workflow_dispatch'
+              run: |
+                  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+                  if [[ -z "$LATEST_TAG" ]]; then
+                    echo "❌ No tags found in repository"
+                    exit 1
+                  fi
+                  echo "TAG=$LATEST_TAG" >> $GITHUB_ENV
+                  git fetch origin tag ${LATEST_TAG}
+                  git checkout ${LATEST_TAG}
+                  echo "✓ Using latest tag: $LATEST_TAG"
+
+            - name: Checkout code (auto trigger)
+              if: github.event_name != 'workflow_dispatch'
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run lint check
+              run: npm run lint
+
+            - name: Build distribution
+              run: npm run build
+
+            - name: Run tests
+              run: npm test
+
+            - name: Verify package size
+              run: |
+                  PACK_SIZE=$(npm pack --dry-run 2>&1 | grep -oP '\d+(?= bytes)' | tail -1)
+                  PACK_SIZE_KB=$(echo "scale=2; $PACK_SIZE / 1024" | bc)
+                  MAX_SIZE_KB=10
+
+                  echo "Package size: ${PACK_SIZE_KB}KB (max: ${MAX_SIZE_KB}KB)"
+
+                  if (( $(echo "$PACK_SIZE_KB > $MAX_SIZE_KB" | bc -l) )); then
+                    echo "❌ Package size ${PACK_SIZE_KB}KB exceeds limit of ${MAX_SIZE_KB}KB"
+                    exit 1
+                  fi
+                  echo "✓ Package size verified"
+
+            - name: Verify type definitions
+              run: |
+                  test -f dist/esm/index.d.ts || exit 1
+                  echo "✓ Type definitions verified"
+
+            - name: Publish to npm
+              run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Create GitHub Release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref }}
+                  release_name: Release ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref }}
+                  body: |
+                      Published to npm: https://www.npmjs.com/package/ts-guards
+
+                      Installation:
+                      ```
+                      npm install ts-guards@${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}
+                      ```
+                  draft: false
+                  prerelease: ${{ contains(github.event_name == 'workflow_dispatch' && env.TAG || github.ref, 'alpha') || contains(github.event_name == 'workflow_dispatch' && env.TAG || github.ref, 'beta') }}
+
+            - name: Verify publication
+              run: |
+                  sleep 5
+                  TAG="${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}"
+                  npm info ts-guards@${TAG#v} || exit 1
+                  echo "✓ Package published successfully"

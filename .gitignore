@@ -1,3 +1,12 @@
+# Build output
+dist/
+build/
+.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
 # Logs
 logs
 *.log
@@ -49,6 +58,7 @@ web_modules/
 
 # Optional npm cache directory
 .npm
+package-lock.json
 
 # Optional eslint cache
 .eslintcache
@@ -137,3 +147,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# AI Agents
+.github/prompts
+openspec/changes
