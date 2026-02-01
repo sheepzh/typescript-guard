@@ -7,10 +7,11 @@ import { TypeGuard } from "./types"
  * @param value - The value to check
  * @param message - Optional error message
  */
-export function assertNotUndefined<T>(value: T | undefined, message?: string): asserts value is T {
+export function assertNotUndefined<T>(value: T | undefined, message?: string): T {
     if (value === undefined) {
         throw new Error(message || "Value is undefined")
     }
+    return value
 }
 
 /**
@@ -20,10 +21,11 @@ export function assertNotUndefined<T>(value: T | undefined, message?: string): a
  * @param value - The value to check
  * @param message - Optional error message
  */
-export function assertNotNullNorUndefined<T>(value: T | null | undefined, message?: string): asserts value is T {
+export function assertNotNullNorUndefined<T>(value: T | null | undefined, message?: string): T {
     if (value === null || value === undefined) {
         throw new Error(message || "Value is null or undefined")
     }
+    return value
 }
 
 
@@ -34,10 +36,11 @@ export function assertNotNullNorUndefined<T>(value: T | null | undefined, messag
  * @param value - The value to check
  * @param message - Optional error message
  */
-export function assertNotNull<T>(value: T | null, message?: string): asserts value is T {
+export function assertNotNull<T>(value: T | null, message?: string): T {
     if (value === null) {
         throw new Error(message || "Value is null")
     }
+    return value
 }
 
 /**
