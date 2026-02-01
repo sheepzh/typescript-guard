@@ -1,16 +1,16 @@
 {
-    "name": "ts-guards",
-    "version": "1.0.0",
+    "name": "typescript-guard",
+    "version": "0.2.0",
     "description": "A type guard library that safely validates and narrows JavaScript variables to TypeScript types. Works seamlessly in both Node.js and browser environments.",
     "license": "MIT",
     "author": "Victor Zhang",
-    "homepage": "https://github.com/sheepzh/ts-guards",
+    "homepage": "https://github.com/sheepzh/typescript-guard",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/sheepzh/ts-guards.git"
+        "url": "git+https://github.com/sheepzh/typescript-guard.git"
     },
     "bugs": {
-        "url": "https://github.com/sheepzh/ts-guards/issues"
+        "url": "https://github.com/sheepzh/typescript-guard/issues"
     },
     "main": "./dist/cjs/index.js",
     "module": "./dist/esm/index.js",
@@ -51,7 +51,7 @@
         "test:coverage": "vitest run --coverage"
     },
     "devDependencies": {
-        "@types/node": "^25.0.10",
+        "@types/node": "^25.1.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18"
     }

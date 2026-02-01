@@ -10,11 +10,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get latest tag
         if: github.event_name == 'workflow_dispatch'
@@ -25,13 +28,8 @@ jobs:
             exit 1
           fi
           echo "TAG=$LATEST_TAG" >> $GITHUB_ENV
-          git fetch origin tag ${LATEST_TAG}
-          git checkout ${LATEST_TAG}
+          git checkout "${LATEST_TAG}"
           echo "✓ Using latest tag: $LATEST_TAG"
-
-      - name: Checkout code (auto trigger)
-        if: github.event_name != 'workflow_dispatch'
-        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,7 +38,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run lint check
         run: npm run lint
@@ -71,30 +69,26 @@ jobs:
           echo "✓ Type definitions verified"
 
       - name: Publish to npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref }}
-          release_name: Release ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}
+          name: Release ${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}
           body: |
-            Published to npm: https://www.npmjs.com/package/ts-guards
+            Published to npm: https://www.npmjs.com/package/typescript-guard
 
             Installation:
             ```
-            npm install ts-guards@${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}
+            npm install typescript-guard@${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}
             ```
           draft: false
-          prerelease: ${{ contains(github.event_name == 'workflow_dispatch' && env.TAG || github.ref, 'alpha') || contains(github.event_name == 'workflow_dispatch' && env.TAG || github.ref, 'beta') }}
+          prerelease: ${{ (github.event_name == 'workflow_dispatch' && (contains(env.TAG, 'alpha') || contains(env.TAG, 'beta'))) || (github.event_name != 'workflow_dispatch' && (contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta'))) }}
 
       - name: Verify publication
         run: |
           sleep 5
           TAG="${{ github.event_name == 'workflow_dispatch' && env.TAG || github.ref_name }}"
-          npm info ts-guards@${TAG#v} || exit 1
+          npm info typescript-guard@${TAG#v} || exit 1
           echo "✓ Package published successfully"

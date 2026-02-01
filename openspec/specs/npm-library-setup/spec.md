@@ -79,13 +79,7 @@ Then it MUST:
 
 #### Scenario: Cross-platform import
 Given ESM code running in Node.js,  
-When importing from the library: `import { isString, isNode } from 'ts-guards'`,  
-Then all exports MUST be available and `isNode()` MUST return `true`.
-
-Given ESM code running in a browser,  
-When importing from the library: `import { isString, isDOM } from 'ts-guards'`,  
-Then all exports MUST be available and `isDOM()` MUST return `true`.
-
+When importing from the library: `import { isString, isNode } from 'typescript-guard'`,  
 ---
 
 ### Requirement: Build System
