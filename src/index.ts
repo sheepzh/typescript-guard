@@ -6,74 +6,7 @@
  * with external APIs and user input.
  */
 
-
-/**
- * A type guard function that checks if a value matches a specific type.
- * 
- * @template T - The type to guard against
- * 
- * @param value - The value to check
- * @param ignoreErr - Optional flag to suppress error logging during validation
- * @returns True if the value matches type T, false otherwise
- * 
- * @remarks
- * The `__invariant_in` and `__invariant_out` properties are internal
- * markers used by TypeScript for type narrowing and are not meant
- * to be accessed directly.
- */
-export type TypeGuard<T> = {
-    (value: unknown): value is T
-    readonly __invariant_in?: (value: T) => void
-    readonly __invariant_out?: () => T
-}
-
-/**
- * Asserts that a value matches a specific type, throwing an error if validation fails.
- * 
- * @overload
- * @template T - The expected type
- * @param value - The value to validate
- * @param guard - The type guard function to use for validation
- * @returns The validated value of type T
- * @throws {Error} If validation fails and no default value is provided
- * 
- * @overload
- * @template T - The expected type
- * @param value - The value to validate
- * @param guard - The type guard function to use for validation
- * @param defaultValue - Default value to return if validation fails
- * @returns The validated value of type T, or the default value if validation fails
- * 
- * @overload
- * @template T - The expected type
- * @param value - The value to validate
- * @param guard - The type guard function to use for validation
- * @param defaultValue - null to allow null return
- * @returns The validated value of type T, or null if validation fails
- * 
- * @example
- * ```typescript
- * const data = await api.get('/user');
- * const user = assertType(data, isUser); // Throws if invalid
- * 
- * const maybeUser = assertType(data, isUser, null); // Returns null if invalid
- * const userWithDefault = assertType(data, isUser, defaultUser); // Returns default if invalid
- * ```
- */
-export function assertType<T>(value: unknown, guard: TypeGuard<T>): T
-export function assertType<T>(value: unknown, guard: TypeGuard<T>, defaultValue: T): T
-export function assertType<T>(value: unknown, guard: TypeGuard<T>, defaultValue: null): T | null
-export function assertType<T>(value: unknown, guard: TypeGuard<T>, defaultValue?: T): T | null {
-    if (guard(value)) {
-        return value
-    } else if (value === null) {
-        return null
-    } else if (defaultValue !== undefined) {
-        return defaultValue
-    } else {
-        throw new Error('Type assertion failed')
-    }
-}
+import type { TypeGuard } from "./types"
 
 /**
  * Helper type that transforms an object type into a structure where each property
@@ -411,3 +344,7 @@ export function createRecordGuard<T>(valueGuard: TypeGuard<T>): TypeGuard<Record
             return true
         })
 }
+
+export * from "./assert"
+export * from "./types"
+
