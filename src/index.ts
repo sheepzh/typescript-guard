@@ -17,11 +17,18 @@ import type { TypeGuard } from "./types"
  * 
  * @template T - The object type to transform
  */
-type CallableGuardFor<T> = {
-    [K in keyof T]:
-    T[K] extends TypeGuard<any> ? T[K] :
-    T[K] extends object ? CallableGuardFor<T[K]> :
-    TypeGuard<Exclude<T[K], undefined> | (undefined extends T[K] ? undefined : never)>
+type GuardMapFor<T extends object> = {
+    [K in keyof T]-?: TypeGuard<T[K]>
+}
+
+type InternalObjectGuard<T> = TypeGuard<T> & {
+    __validateAtPath?: (value: unknown, path: string) => value is T
+}
+
+type NormalizeOptionalProps<T extends object> = {
+    [K in keyof T as undefined extends T[K] ? never : K]: T[K]
+} & {
+    [K in keyof T as undefined extends T[K] ? K : never]?: Exclude<T[K], undefined>
 }
 
 /**
@@ -288,16 +295,19 @@ export function createNullableGuard<T>(guard: TypeGuard<T>): TypeGuard<T | null>
  * ```
  */
 export function createObjectGuard<T extends object>(
-    guards: CallableGuardFor<{ [K in keyof T]-?: TypeGuard<T[K]> }>
-): TypeGuard<T> {
-    return wrapObjectGuard(guards, '$')
+    guards: GuardMapFor<T>
+): TypeGuard<NormalizeOptionalProps<T>> {
+    const validateAtPath = wrapObjectGuard<NormalizeOptionalProps<T>>(guards)
+    const guard: InternalObjectGuard<NormalizeOptionalProps<T>> =
+        ((value: unknown): value is NormalizeOptionalProps<T> => validateAtPath(value, '$'))
+    guard.__validateAtPath = validateAtPath
+    return guard
 }
 
 function wrapObjectGuard<T extends object>(
-    guards: CallableGuardFor<{ [K in keyof T]-?: TypeGuard<T[K]> }>,
-    path: string,
-): TypeGuard<T> {
-    return (value: unknown): value is T => {
+    guards: Record<string, TypeGuard<any>>,
+): (value: unknown, path: string) => value is T {
+    return (value: unknown, path: string): value is T => {
         if (typeof value !== 'object' || value === null) {
             console.warn(`[${path}] Invalid object: `, value)
             return false
@@ -310,8 +320,17 @@ function wrapObjectGuard<T extends object>(
                 return false
             }
             const guardTarget = (value as any)?.[key]
-            if (!guard(guardTarget)) {
-                console.log(`[${path}.${key}] Invalid value:`, guardTarget)
+            const nestedGuard = guard as InternalObjectGuard<any>
+            const currentPath = `${path}.${key}`
+            const isValid = nestedGuard.__validateAtPath
+                ? nestedGuard.__validateAtPath(guardTarget, currentPath)
+                : guard(guardTarget)
+            if (!isValid) {
+                if (nestedGuard.__validateAtPath) {
+                    // Nested object guard has already logged the detailed path.
+                    return false
+                }
+                console.log(`[${currentPath}] Invalid value:`, guardTarget)
                 return false
             }
         }
