@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { createObjectGuard, isNumber, isString, isUnknown, TypeGuard } from "../src"
+import { createArrayGuard, createObjectGuard, isNumber, isString, isUnknown, TypeGuard } from "../src"
 
 type GenericExample<T> = {
     data: { data: T }[]
+}
+
+type AnotherGenericExample<T> = {
+    data: { data: T }
 }
 
 describe('Generic Example', () => {
@@ -21,22 +25,26 @@ describe('Generic Example', () => {
             ]
         }
 
-        const isStringExample: TypeGuard<GenericExample<string>> = createObjectGuard<GenericExample<string>>({
-            data: createObjectGuard({
-                data: isString,
-            })
+        const isGenericExample = <T,>(itemGuard: TypeGuard<T>) => createObjectGuard<GenericExample<T>>({
+            data: createArrayGuard(createObjectGuard({ data: itemGuard }))
         })
 
+        const isStringExample: TypeGuard<GenericExample<string>> = isGenericExample(isString)
+
         const isNumberExample: TypeGuard<GenericExample<number>> = createObjectGuard<GenericExample<number>>({
-            data: createObjectGuard({
-                data: isNumber,
-            })
+            data: createArrayGuard(
+                createObjectGuard({
+                    data: isNumber,
+                })
+            )
         })
 
         const isUnknownExample: TypeGuard<GenericExample<unknown>> = createObjectGuard<GenericExample<unknown>>({
-            data: createObjectGuard({
-                data: isUnknown
-            })
+            data: createArrayGuard(
+                createObjectGuard({
+                    data: isUnknown,
+                })
+            )
         })
 
         expect(isStringExample(stringExample)).toBe(true)
@@ -47,5 +55,12 @@ describe('Generic Example', () => {
 
         expect(isUnknownExample(stringExample)).toBe(true)
         expect(isUnknownExample(numberExample)).toBe(true)
+
+        const isAnotherGenericStringExample = createObjectGuard<AnotherGenericExample<string>>({
+            data: createObjectGuard({
+                data: isString,
+            })
+        })
+        expect(isAnotherGenericStringExample(stringExample)).toBe(false)
     })
 })

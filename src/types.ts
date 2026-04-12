@@ -14,7 +14,6 @@
  */
 export type TypeGuard<T> = {
     (value: unknown): value is T
-    readonly __invariant_in?: (value: T) => void
     readonly __invariant_out?: () => T
 }
 
