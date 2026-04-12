@@ -57,8 +57,6 @@ describe('Type Guards', () => {
         expect(isActivity({ ts: 1000, count: 5 })).toBe(true)
         expect(isActivity({ ts: 1000, desc: 'test', count: 5 })).toBe(true)
         expect(isActivity({ ts: 'invalid', count: 5 })).toBe(false)
-
-
     })
 
     it('should validate User object', () => {

@@ -18,7 +18,7 @@ import type { TypeGuard } from "./types"
  * @template T - The object type to transform
  */
 type GuardMapFor<T extends object> = {
-    [K in keyof T]-?: TypeGuard<T[K]>
+    [K in keyof T]-?: T[K] extends (infer E)[] ? TypeGuard<T[K]> | TypeGuard<E> : TypeGuard<T[K]>
 }
 
 type InternalObjectGuard<T> = TypeGuard<T> & {
@@ -26,9 +26,9 @@ type InternalObjectGuard<T> = TypeGuard<T> & {
 }
 
 type NormalizeOptionalProps<T extends object> = {
-    [K in keyof T as undefined extends T[K] ? never : K]: T[K]
+    [K in keyof T as {} extends Pick<T, K> ? never : [undefined] extends [T[K]] ? [unknown] extends [T[K]] ? K : never : K]: T[K]
 } & {
-    [K in keyof T as undefined extends T[K] ? K : never]?: Exclude<T[K], undefined>
+    [K in keyof T as {} extends Pick<T, K> ? K : [undefined] extends [T[K]] ? [unknown] extends [T[K]] ? never : K : never]?: Exclude<T[K], undefined>
 }
 
 /**
@@ -322,9 +322,18 @@ function wrapObjectGuard<T extends object>(
             const guardTarget = (value as any)?.[key]
             const nestedGuard = guard as InternalObjectGuard<any>
             const currentPath = `${path}.${key}`
-            const isValid = nestedGuard.__validateAtPath
-                ? nestedGuard.__validateAtPath(guardTarget, currentPath)
-                : guard(guardTarget)
+            let isValid: boolean
+            if (nestedGuard.__validateAtPath) {
+                if (Array.isArray(guardTarget)) {
+                    isValid = guardTarget.every((item: unknown, i: number) =>
+                        nestedGuard.__validateAtPath!(item, `${currentPath}[${i}]`)
+                    )
+                } else {
+                    isValid = nestedGuard.__validateAtPath(guardTarget, currentPath)
+                }
+            } else {
+                isValid = guard(guardTarget)
+            }
             if (!isValid) {
                 if (nestedGuard.__validateAtPath) {
                     // Nested object guard has already logged the detailed path.
