@@ -66,12 +66,16 @@ export const isString = createGuard<string>(
     (value): value is string => typeof value === 'string'
 )
 
+export const isOptionalString = createOptionalGuard(isString)
+
 /**
  * Type guard for number values (including NaN and Infinity).
  */
 export const isNumber = createGuard<number>(
     (value): value is number => typeof value === 'number'
 )
+
+export const isOptionalNumber = createOptionalGuard(isNumber)
 
 /**
  * Type guard for safe integer values.
@@ -83,12 +87,16 @@ export const isInt = createGuard<number>(
     (value): value is number => Number.isSafeInteger(value)
 )
 
+export const isOptionalInt = createOptionalGuard(isInt)
+
 /**
  * Type guard for boolean values.
  */
 export const isBoolean = createGuard<boolean>(
     (value): value is boolean => typeof value === 'boolean'
 )
+
+export const isOptionalBoolean = createOptionalGuard(isBoolean)
 
 /**
  * Type guard for undefined values.
