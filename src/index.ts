@@ -120,6 +120,13 @@ export const isUnknown = createGuard<unknown>(
 )
 
 /**
+ * Type guard that accepts any value (always returns true).
+ */
+export const isAny = createGuard<any>(
+    (_value): _value is any => true
+)
+
+/**
  * Creates a type guard for a specific literal value.
  * 
  * @template T - The literal type (string, number, boolean, or undefined)
