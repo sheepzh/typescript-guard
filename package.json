@@ -1,6 +1,6 @@
 {
     "name": "typescript-guard",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "A type guard library that safely validates and narrows JavaScript variables to TypeScript types. Works seamlessly in both Node.js and browser environments.",
     "license": "MIT",
     "author": "Victor Zhang",
